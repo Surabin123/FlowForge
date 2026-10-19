@@ -1,0 +1,15 @@
+.venv/
+node_modules/
+dist/
+.pytest_cache/
+.pytest-tmp/
+*.tsbuildinfo
+__pycache__/
+*.py[cod]
+.env
+data/*
+!data/.gitkeep
+storage/documents/*
+!storage/documents/.gitkeep
+*.log
+.pytest-run/
