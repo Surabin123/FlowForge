@@ -12,7 +12,7 @@ Updated: 2026-10-19
 
 - Connected notification count/history and workflow schedule controls to persisted application data. Added user confirmation before document text is sent to the configured external AI provider.
 - Files: `frontend/src/App.tsx`, `frontend/src/styles.css`, `frontend/src/App.test.tsx`.
-- Checks: frontend tests passed (2); TypeScript/Vite production build passed.
+- Checks: frontend tests passed (3); TypeScript/Vite production build passed.
 - Remaining: screenshots could not be captured because local browser use is disabled in the desktop environment. Frontend journey coverage now includes task creation/completion and reminder setup.
 
 ## Phase 2 — Reminders and scheduling
@@ -33,9 +33,10 @@ Updated: 2026-10-19
 ## Phase 4 — Reliability and release engineering
 
 - Added GitHub credential/rate-limit diagnostics and successful-refresh timestamp. GitHub actions remain read-only.
-- Added `.github/workflows/ci.yml`, `docs/ARCHITECTURE.md`, and a rewritten developer README. Frontend suite passed (3 tests); TypeScript/Vite production build and Python compile checks passed.
+- Added `.github/workflows/ci.yml`, `docs/ARCHITECTURE.md`, and a rewritten developer README. Backend suite passed (19 tests); frontend suite passed (3 tests); TypeScript/Vite production build and Python compile checks passed.
 - A local startup smoke test returned API health `ok` and UI HTTP 200. Browser automation returned “Local browser use is disabled in Work settings”; no screenshot was fabricated.
 - Source and placeholder configuration scan found no credential patterns; `.env`, databases, uploads, caches, and generated artifacts are ignored.
+- Created a clean local Git repository on `main` and committed the reviewed source as `1995d1240b5225840da48f1c043f212bb1dca9e8`; configured `origin` to the requested URL. Working tree is clean.
 - GitHub public lookup returned “Repository not found”; this cannot distinguish a private repo from an absent repo. No `gh` CLI or Git credential helper/token was available. The unauthenticated remote lookup cannot establish remote state or publish.
 
 ## Next work
