@@ -30,7 +30,7 @@ The access token is stored in browser `sessionStorage` for the current tab sessi
 These steps require access to the user's GitHub and Render accounts:
 
 1. Review the local changes and run the CI commands listed in the README.
-2. Commit and push the reviewed changes to the existing GitHub repository's `main` branch. This project does not need a new repository.
+2. Ensure the reviewed changes and passing CI are present on the existing GitHub repository's `main` branch.
 3. In Render, create a Blueprint instance from the existing repository and select `render.yaml`. Confirm the paid plan and disk costs before applying it.
 4. Confirm the generated `FLOWFORGE_ACCESS_TOKEN` and the `/var/data` disk are present in the service configuration. Render generates the token; do not copy it into the repository.
 5. Wait for the first deploy to become healthy. Open the assigned HTTPS URL, enter the token, and confirm the workspace loads.

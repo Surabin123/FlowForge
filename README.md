@@ -2,6 +2,8 @@
 
 # FlowForge
 
+[![FlowForge checks](https://github.com/Surabin123/FlowForge/actions/workflows/ci.yml/badge.svg)](https://github.com/Surabin123/FlowForge/actions/workflows/ci.yml)
+
 **Plan your work, automate the repeatable parts, and see what actually happened.**
 
 FlowForge is a private, local-first workspace for tasks, study sessions, documents, reminders, and approved AI-assisted automations. It combines everyday planning with a persistent workflow engine, so an automation can read real records, ask for approval, execute registered actions, and report a verified outcome.
@@ -140,7 +142,7 @@ npm --prefix frontend test
 npm --prefix frontend run build
 ```
 
-The most recent local run passed **37 backend tests** and **7 frontend tests**, plus Python compilation and a TypeScript/Vite production build. GitHub Actions runs these checks for pushes and pull requests to `main`. The provider tests use deterministic mocks; a live AI service and a remote deployment have not been verified.
+The most recent local run passed **37 backend tests** and **7 frontend tests**, plus Python compilation and a TypeScript/Vite production build. [GitHub Actions](https://github.com/Surabin123/FlowForge/actions/workflows/ci.yml) also completed successfully for the publication commit. The provider tests use deterministic mocks; a live AI service and a remote deployment have not been verified.
 
 The [benchmark report](docs/benchmarks/README.md) is synthetic and local. It is not a hosted-capacity claim.
 
