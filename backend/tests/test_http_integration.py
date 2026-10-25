@@ -1,6 +1,9 @@
-import time
+import re, time
+from pathlib import Path
+import pytest
 from fastapi.testclient import TestClient
 from app import config
+from app.database import connect
 from app.main import app
 
 def test_http_task_and_workflow_run_lifecycle(tmp_path,monkeypatch):
@@ -38,3 +41,47 @@ def test_http_paused_run_can_be_cancelled(tmp_path,monkeypatch):
         cancelled=client.post(f"/api/runs/{run_id}/cancel")
         assert cancelled.json()["status"]=="cancelled"
         assert client.get(f"/api/runs/{run_id}").json()["nodes"][0]["status"]=="cancelled"
+
+def test_required_access_token_protects_api_but_keeps_health_public(tmp_path,monkeypatch):
+    monkeypatch.setattr(config.settings,"database",str(tmp_path/"auth.db"))
+    monkeypatch.setattr(config.settings,"documents",str(tmp_path/"docs"))
+    monkeypatch.setattr(config.settings,"require_auth",True)
+    monkeypatch.setattr(config.settings,"access_token","test-private-token")
+    with TestClient(app) as client:
+        assert client.get("/api/health").status_code==200
+        assert client.get("/api/auth/status").json()=={"required":True}
+        assert client.get("/api/bootstrap").status_code==401
+        assert client.post("/api/auth/login",json={"token":"wrong"}).status_code==401
+        assert client.post("/api/auth/login",json={"token":"test-private-token"}).json()=={"authenticated":True}
+        assert client.get("/api/bootstrap",headers={"Authorization":"Bearer test-private-token"}).status_code==200
+
+def test_manual_run_idempotency_key_returns_existing_execution(tmp_path,monkeypatch):
+    monkeypatch.setattr(config.settings,"database",str(tmp_path/"idempotency.db"))
+    monkeypatch.setattr(config.settings,"documents",str(tmp_path/"docs"))
+    with TestClient(app) as client:
+        workflow=client.post("/api/workflows",json={"name":"Idempotent start","nodes":[{"id":"one","name":"One","type":"transform","config":{"output":{"ok":True}}}],"edges":[]})
+        wid=workflow.json()["id"]
+        headers={"Idempotency-Key":"start-request-001"}
+        first=client.post(f"/api/workflows/{wid}/runs",headers=headers)
+        second=client.post(f"/api/workflows/{wid}/runs",headers=headers)
+        assert first.status_code==second.status_code==202
+        assert first.json()["id"]==second.json()["id"]
+        assert second.json()["duplicate"] is True
+        with connect() as db:
+            row=db.execute("SELECT COUNT(*) count,request_id FROM runs WHERE workflow_id=?",(wid,)).fetchone()
+            assert row["count"]==1
+            assert row["request_id"]==first.headers["x-request-id"]
+
+def test_built_frontend_is_served_by_fastapi(tmp_path,monkeypatch):
+    dist=Path(__file__).resolve().parents[2]/"frontend"/"dist"
+    if not (dist/"index.html").is_file(): pytest.skip("frontend production bundle has not been built")
+    monkeypatch.setattr(config.settings,"database",str(tmp_path/"static.db"))
+    monkeypatch.setattr(config.settings,"documents",str(tmp_path/"docs"))
+    with TestClient(app) as client:
+        page=client.get("/")
+        assert page.status_code==200
+        assert "FlowForge" in page.text
+        asset=re.search(r'(?:src|href)="(/assets/[^\"]+)',page.text)
+        assert asset and client.get(asset.group(1)).status_code==200
+        assert client.get("/api/health").json()["database"]=="ok"
+        assert client.get("/api/not-found").status_code==404

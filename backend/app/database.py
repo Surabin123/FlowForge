@@ -3,6 +3,8 @@ import sqlite3
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from .config import settings
+from .observability import metrics
+import time
 
 SCHEMA = """
 PRAGMA foreign_keys=ON;
@@ -19,13 +21,22 @@ CREATE TABLE IF NOT EXISTS node_runs (id TEXT PRIMARY KEY, run_id TEXT NOT NULL 
 CREATE TABLE IF NOT EXISTS agents (id TEXT PRIMARY KEY, name TEXT NOT NULL, purpose TEXT NOT NULL DEFAULT '', instructions TEXT NOT NULL DEFAULT '', model TEXT NOT NULL DEFAULT '', input_schema TEXT NOT NULL DEFAULT '{}', output_schema TEXT NOT NULL DEFAULT '{}', created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS audit_log (id INTEGER PRIMARY KEY AUTOINCREMENT, event TEXT NOT NULL, resource_type TEXT NOT NULL, resource_id TEXT, details TEXT NOT NULL DEFAULT '{}', created_at TEXT NOT NULL);
-CREATE INDEX IF NOT EXISTS idx_tasks_due ON tasks(due_at); CREATE INDEX IF NOT EXISTS idx_runs_created ON runs(created_at DESC);
+CREATE TABLE IF NOT EXISTS automation_plans (id TEXT PRIMARY KEY, request_text TEXT NOT NULL, title TEXT NOT NULL, summary TEXT NOT NULL, definition TEXT NOT NULL, status TEXT NOT NULL, questions TEXT NOT NULL DEFAULT '[]', schedule_at TEXT, schedule_recurrence TEXT, schedule_timezone TEXT NOT NULL, approval_hash TEXT, approved_at TEXT, workflow_id TEXT REFERENCES workflows(id) ON DELETE SET NULL, provider_model TEXT, prompt_version TEXT NOT NULL, tokens_total INTEGER, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS automation_approvals (id TEXT PRIMARY KEY, plan_id TEXT NOT NULL REFERENCES automation_plans(id) ON DELETE CASCADE, definition_hash TEXT NOT NULL, approved_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS generated_artifacts (id TEXT PRIMARY KEY, title TEXT NOT NULL, kind TEXT NOT NULL, content TEXT NOT NULL, source_run_id TEXT NOT NULL REFERENCES runs(id) ON DELETE CASCADE, source_node_id TEXT NOT NULL, created_at TEXT NOT NULL, UNIQUE(source_run_id,source_node_id));
+CREATE TABLE IF NOT EXISTS tool_effects (run_id TEXT NOT NULL REFERENCES runs(id) ON DELETE CASCADE, node_id TEXT NOT NULL, tool_id TEXT NOT NULL, resource_type TEXT NOT NULL, resource_id TEXT NOT NULL, created_at TEXT NOT NULL, PRIMARY KEY(run_id,node_id));
+CREATE INDEX IF NOT EXISTS idx_tasks_due ON tasks(due_at);
+CREATE INDEX IF NOT EXISTS idx_runs_created ON runs(created_at DESC); CREATE INDEX IF NOT EXISTS idx_runs_status_trigger ON runs(status,trigger_type,created_at);
+CREATE INDEX IF NOT EXISTS idx_node_runs_run_status ON node_runs(run_id,status);
+CREATE INDEX IF NOT EXISTS idx_schedules_enabled_next ON workflow_schedules(enabled,next_run_at);
+CREATE INDEX IF NOT EXISTS idx_automation_plans_updated ON automation_plans(updated_at DESC);
 """
 
 def now() -> str: return datetime.now(timezone.utc).isoformat()
 
 @contextmanager
 def connect():
+    started=time.perf_counter()
     settings.db_path.parent.mkdir(parents=True, exist_ok=True)
     db = sqlite3.connect(settings.db_path, timeout=10)
     db.row_factory = sqlite3.Row
@@ -33,9 +44,11 @@ def connect():
     try:
         yield db
         db.commit()
-    except Exception:
+    except BaseException:
         db.rollback(); raise
-    finally: db.close()
+    finally:
+        db.close()
+        metrics.observe("database.transaction.duration_ms",(time.perf_counter()-started)*1000)
 
 def init_db():
     with connect() as db:
@@ -48,6 +61,15 @@ def init_db():
             if name not in document_cols: db.execute(f"ALTER TABLE documents ADD COLUMN {name} {definition}")
         cols={r["name"] for r in db.execute("PRAGMA table_info(runs)")}
         if "definition" not in cols: db.execute("ALTER TABLE runs ADD COLUMN definition TEXT NOT NULL DEFAULT '{}' ")
+        run_migrations={"request_id":"TEXT","execution_id":"TEXT","duration_ms":"INTEGER","error_category":"TEXT","failure_reason":"TEXT","idempotency_key":"TEXT"}
+        for name,definition in run_migrations.items():
+            if name not in cols: db.execute(f"ALTER TABLE runs ADD COLUMN {name} {definition}")
+        node_cols={r["name"] for r in db.execute("PRAGMA table_info(node_runs)")}
+        node_migrations={"duration_ms":"INTEGER","error_category":"TEXT","failure_reason":"TEXT","attempt_details":"TEXT NOT NULL DEFAULT '[]'","attempt_started_at":"TEXT"}
+        for name,definition in node_migrations.items():
+            if name not in node_cols: db.execute(f"ALTER TABLE node_runs ADD COLUMN {name} {definition}")
+        db.execute("CREATE INDEX IF NOT EXISTS idx_tasks_status_reminder_due ON tasks(status,reminder_enabled,reminder_at,due_at)")
+        db.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_runs_idempotency ON runs(workflow_id,idempotency_key) WHERE idempotency_key IS NOT NULL")
         db.execute("DELETE FROM node_runs WHERE rowid NOT IN (SELECT MAX(rowid) FROM node_runs GROUP BY run_id,node_id)")
         db.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_node_runs_unique ON node_runs(run_id,node_id)")
 

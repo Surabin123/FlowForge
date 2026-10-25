@@ -1,0 +1,127 @@
+{
+  "environment": {
+    "os": "Windows-11-10.0.26200-SP0",
+    "python": "3.12.14",
+    "sqlite": "3.53.1"
+  },
+  "method": {
+    "iterations_per_workload": 100,
+    "warmup_per_workload": 10,
+    "provider_simulated_delay_ms": 20.0,
+    "node_concurrency": 4,
+    "concurrent_runs": 4,
+    "measurement": "perf_counter monotonic wall clock; p95 requires the default 100 measured samples; provider is an in-process stub, not a network benchmark"
+  },
+  "workloads": [
+    {
+      "workload": "small dependent workflow (5 nodes)",
+      "samples": 100,
+      "concurrency": 1,
+      "workflow_latency_ms": {
+        "p50": 74.12599999224767,
+        "p95": 120.71350001497194
+      },
+      "node_latency_ms": {
+        "samples": 500,
+        "p50": 0,
+        "p95": 0
+      },
+      "throughput_runs_per_second": 11.216,
+      "failure_rate": 0.0,
+      "wall_seconds": 8.916
+    },
+    {
+      "workload": "larger dependency graph (40 nodes)",
+      "samples": 100,
+      "concurrency": 1,
+      "workflow_latency_ms": {
+        "p50": 472.2213000059128,
+        "p95": 629.7186000156216
+      },
+      "node_latency_ms": {
+        "samples": 4000,
+        "p50": 0,
+        "p95": 0
+      },
+      "throughput_runs_per_second": 1.982,
+      "failure_rate": 0.0,
+      "wall_seconds": 50.447
+    },
+    {
+      "workload": "document text extraction plus workflow serialization (synthetic 64KB TXT)",
+      "samples": 100,
+      "concurrency": 1,
+      "workflow_latency_ms": {
+        "p50": 52.02200001804158,
+        "p95": 64.82849997701123
+      },
+      "node_latency_ms": {
+        "samples": 200,
+        "p50": 0,
+        "p95": 1
+      },
+      "throughput_runs_per_second": 17.667,
+      "failure_rate": 0.0,
+      "wall_seconds": 5.66
+    },
+    {
+      "workload": "simulated slow/transient provider (no network)",
+      "samples": 100,
+      "concurrency": 1,
+      "workflow_latency_ms": {
+        "p50": 104.15349999675527,
+        "p95": 129.2883999994956
+      },
+      "node_latency_ms": {
+        "samples": 100,
+        "p50": 62,
+        "p95": 69
+      },
+      "throughput_runs_per_second": 8.691,
+      "failure_rate": 0.0,
+      "wall_seconds": 11.506
+    },
+    {
+      "workload": "4 concurrent 10-node executions",
+      "samples": 100,
+      "concurrency": 4,
+      "workflow_latency_ms": {
+        "p50": 438.211600005161,
+        "p95": 577.9773999820463
+      },
+      "node_latency_ms": {
+        "samples": 1000,
+        "p50": 0,
+        "p95": 0
+      },
+      "throughput_runs_per_second": 8.02,
+      "failure_rate": 0.0,
+      "wall_seconds": 12.469
+    }
+  ],
+  "scheduler_empty_due_poll_ms": {
+    "samples": 100,
+    "p50": 1.1085000005550683,
+    "p95": 1.7213000101037323
+  },
+  "provider_retries": 110,
+  "sqlite_query_plans": {
+    "due_tasks": [
+      "SEARCH tasks USING INDEX idx_tasks_status_reminder_due (status=?)"
+    ],
+    "due_schedules": [
+      "SEARCH workflow_schedules USING INDEX idx_schedules_enabled_next (enabled=?)"
+    ]
+  },
+  "sqlite_file_bytes": 34680832,
+  "process_usage": {
+    "cpu_seconds": 66.796875,
+    "peak_rss_bytes_start": null,
+    "peak_rss_bytes_end": null
+  },
+  "limitations": [
+    "Synthetic local data only; no live AI provider, Render disk, or remote network measured.",
+    "CPU and peak RSS are process-level and include interpreter/test harness overhead.",
+    "The document case performs actual local text extraction and then serializes the extracted text through a transform workflow; it is not a PDF benchmark."
+  ]
+}

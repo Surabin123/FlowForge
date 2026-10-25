@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: flowforge
+    runtime: docker
+    plan: starter
+    region: oregon
+    branch: main
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    autoDeployTrigger: commit
+    disk:
+      name: flowforge-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: FLOWFORGE_REQUIRE_AUTH
+        value: "true"
+      - key: FLOWFORGE_ACCESS_TOKEN
+        generateValue: true
+      - key: FLOWFORGE_DATABASE
+        value: /var/data/flowforge.db
+      - key: FLOWFORGE_DOCUMENTS
+        value: /var/data/documents
+      - key: FLOWFORGE_ALLOWED_HOSTS
+        value: "*"
+      - key: FLOWFORGE_TIMEZONE
+        value: Asia/Calcutta

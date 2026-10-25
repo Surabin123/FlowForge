@@ -6,13 +6,16 @@ const store={tasks:[],subjects:[],sessions:[],documents:[],workflows:[],runs:[],
  tasks:{id:string;title:string;description:string;due_at:string|null;priority:string;category:string;status:string;recurrence:string|null;reminder_at:string|null;reminder_enabled?:boolean|number;completed_at:string|null}[]
  subjects:never[];sessions:never[];documents:never[];workflows:never[];runs:never[];agents:never[];notifications:never[];settings:Record<string,string>
 }
+let authRequired=false
 
 beforeEach(()=>{
- localStorage.clear();store.tasks=[];store.notifications=[]
+ localStorage.clear();sessionStorage.clear();store.tasks=[];store.notifications=[];authRequired=false
  vi.stubGlobal('fetch',vi.fn(async(input:RequestInfo|URL,init?:RequestInit)=>{
   const url=String(input),method=init?.method||'GET'
   let result:unknown={}
-  if(url==='/api/bootstrap')result=store
+  if(url==='/api/auth/status')result={required:authRequired}
+  else if(url==='/api/auth/login')result={authenticated:true}
+  else if(url==='/api/bootstrap')result=store
   else if(url==='/api/tasks'&&method==='POST'){
    const body=JSON.parse(String(init?.body));const task={id:`task-${store.tasks.length+1}`,description:'',due_at:null,priority:'medium',category:'personal',status:'open',recurrence:null,reminder_at:null,completed_at:null,...body};store.tasks.push(task);result=task
   }else if(url.startsWith('/api/tasks/')&&method==='PATCH'){
@@ -24,6 +27,16 @@ beforeEach(()=>{
 afterEach(()=>{cleanup();vi.unstubAllGlobals()})
 
 describe('FlowForge task workspace',()=>{
+ it('requires a token when the service enables remote access protection',async()=>{
+  authRequired=true
+  render(<App />)
+  expect(await screen.findByRole('heading',{name:'Welcome back'})).toBeInTheDocument()
+  fireEvent.change(screen.getByLabelText('Access token'),{target:{value:'private-token'}})
+  fireEvent.click(screen.getByRole('button',{name:'Unlock workspace'}))
+  expect(await screen.findByRole('heading',{name:/Good (morning|afternoon|evening)/})).toBeInTheDocument()
+  expect(sessionStorage.getItem('ff-access-token')).toBe('private-token')
+ })
+
  it('creates a task and displays the persisted row',async()=>{
   render(<App />)
   await screen.findByRole('heading',{name:/Good (morning|afternoon|evening)/})

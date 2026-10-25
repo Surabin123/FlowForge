@@ -2,7 +2,9 @@ name: FlowForge checks
 
 on:
   push:
+    branches: [main]
   pull_request:
+    branches: [main]
 
 permissions:
   contents: read
@@ -26,9 +28,13 @@ jobs:
         run: python -m pip install -r requirements.txt
       - name: Backend tests
         run: python -m pytest backend/tests -q --basetemp .pytest-tmp
+      - name: Python compilation
+        run: python -m compileall -q backend/app
       - name: Frontend install
         run: npm --prefix frontend ci
       - name: Frontend tests
         run: npm --prefix frontend test
+      - name: Lint
+        run: npm --prefix frontend run --if-present lint
       - name: Type check and production build
         run: npm --prefix frontend run build

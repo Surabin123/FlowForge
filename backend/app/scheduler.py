@@ -40,7 +40,10 @@ def process_due(now_utc: datetime | None = None) -> int:
     with connect() as db:
         setting = db.execute("SELECT value FROM settings WHERE key='timezone'").fetchone()
         user_timezone = setting["value"] if setting else "Asia/Calcutta"
-        tasks = db.execute("SELECT * FROM tasks WHERE status='open'").fetchall()
+        tasks = db.execute(
+            "SELECT * FROM tasks WHERE status='open' AND ((due_at IS NOT NULL AND julianday(due_at)<=julianday(?)) OR (reminder_enabled=1 AND reminder_at IS NOT NULL AND julianday(reminder_at)<=julianday(?)))",
+            (instant.isoformat(), instant.isoformat()),
+        ).fetchall()
         for task in tasks:
             if task["due_at"] and parse_instant(task["due_at"]) <= instant:
                 due_key = f"task-due:{task['id']}:{task['due_at']}"
@@ -65,7 +68,7 @@ def process_due(now_utc: datetime | None = None) -> int:
             else:
                 db.execute("UPDATE tasks SET reminder_enabled=0,updated_at=? WHERE id=?", (instant.isoformat(), task["id"]))
 
-        schedules = db.execute("SELECT s.*,w.name,w.definition,w.enabled workflow_enabled FROM workflow_schedules s JOIN workflows w ON w.id=s.workflow_id WHERE s.enabled=1 AND w.enabled=1").fetchall()
+        schedules = db.execute("SELECT s.*,w.name,w.definition,w.enabled workflow_enabled FROM workflow_schedules s JOIN workflows w ON w.id=s.workflow_id WHERE s.enabled=1 AND w.enabled=1 AND julianday(s.next_run_at)<=julianday(?)", (instant.isoformat(),)).fetchall()
         for schedule in schedules:
             due = parse_instant(schedule["next_run_at"])
             if due > instant:
@@ -75,7 +78,7 @@ def process_due(now_utc: datetime | None = None) -> int:
             if claimed.rowcount:
                 try:
                     definition = schedule["definition"]
-                    db.execute("INSERT INTO runs(id,workflow_id,workflow_name,status,trigger_type,started_at,created_at,definition) VALUES(?,?,?,?,?,?,?,?)", (occurrence_key, schedule["workflow_id"], schedule["name"], "queued", "schedule", instant.isoformat(), instant.isoformat(), json.dumps(json.loads(definition))))
+                    db.execute("INSERT INTO runs(id,workflow_id,workflow_name,status,trigger_type,started_at,created_at,definition,idempotency_key) VALUES(?,?,?,?,?,?,?,?,?)", (occurrence_key, schedule["workflow_id"], schedule["name"], "queued", "schedule", instant.isoformat(), instant.isoformat(), json.dumps(json.loads(definition)), occurrence_key))
                     db.execute("UPDATE workflow_schedules SET last_run_at=?,error=NULL WHERE workflow_id=?", (instant.isoformat(), schedule["workflow_id"]))
                     created += 1
                 except Exception as exc:

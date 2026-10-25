@@ -13,3 +13,8 @@ storage/documents/*
 !storage/documents/.gitkeep
 *.log
 .pytest-run/
+.tmp/
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
