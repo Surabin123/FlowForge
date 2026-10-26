@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     github_owner: str = ""
     require_auth: bool = False
     access_token: str = ""
+    container_mode: bool = False
     allowed_hosts: str = "127.0.0.1,localhost,testserver"
     model_config = SettingsConfigDict(env_prefix="FLOWFORGE_", env_file=ROOT / ".env", extra="ignore")
 
@@ -40,5 +41,19 @@ class Settings(BaseSettings):
     @property
     def trusted_hosts(self) -> list[str]:
         return [host.strip() for host in self.allowed_hosts.split(",") if host.strip()]
+
+    def validate_runtime(self) -> None:
+        if self.require_auth and not self.access_token:
+            raise RuntimeError("FLOWFORGE_ACCESS_TOKEN is required when FLOWFORGE_REQUIRE_AUTH is enabled")
+        if not self.container_mode:
+            return
+        if not self.require_auth:
+            raise RuntimeError("Container mode requires FLOWFORGE_REQUIRE_AUTH=true")
+        if len(self.access_token) < 32:
+            raise RuntimeError("Container mode requires a FLOWFORGE_ACCESS_TOKEN of at least 32 characters")
+        if not self.trusted_hosts or "*" in self.trusted_hosts:
+            raise RuntimeError("Container mode requires explicit FLOWFORGE_ALLOWED_HOSTS")
+        if not Path(self.database).is_absolute() or not Path(self.documents).is_absolute():
+            raise RuntimeError("Container mode requires absolute FLOWFORGE_DATABASE and FLOWFORGE_DOCUMENTS paths")
 
 settings = Settings()

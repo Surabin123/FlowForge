@@ -1,48 +1,31 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="360" viewBox="0 0 1280 360" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="220" viewBox="0 0 1200 220" role="img" aria-labelledby="title desc">
   <title id="title">FlowForge</title>
-  <desc id="desc">A personal productivity and automation workspace, illustrated by connected task, plan, approval, and result nodes.</desc>
+  <desc id="desc">FlowForge wordmark beside a restrained plan, approve, run, verify workflow motif.</desc>
   <defs>
-    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#091827"/>
-      <stop offset="0.56" stop-color="#102b3a"/>
-      <stop offset="1" stop-color="#173e49"/>
+    <linearGradient id="surface" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#10212b"/>
+      <stop offset="1" stop-color="#17313a"/>
     </linearGradient>
     <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#75e3c4"/>
-      <stop offset="1" stop-color="#c4ef8a"/>
+      <stop offset="0" stop-color="#75dfba"/>
+      <stop offset="1" stop-color="#bce88c"/>
     </linearGradient>
-    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-      <path d="M40 0H0V40" fill="none" stroke="#96c5bc" stroke-opacity=".07"/>
-    </pattern>
-    <filter id="glow"><feGaussianBlur stdDeviation="22"/></filter>
   </defs>
-  <rect width="1280" height="360" rx="26" fill="url(#background)"/>
-  <rect width="1280" height="360" rx="26" fill="url(#grid)"/>
-  <circle cx="1058" cy="125" r="118" fill="#59d9b9" opacity=".1" filter="url(#glow)"/>
-  <circle cx="1190" cy="310" r="130" fill="#c4ef8a" opacity=".07" filter="url(#glow)"/>
-  <path d="M70 80h36l17 17-17 17H70L53 97z" fill="none" stroke="url(#accent)" stroke-width="5" stroke-linejoin="round"/>
-  <path d="M74 97h28" stroke="url(#accent)" stroke-width="5" stroke-linecap="round"/>
-  <text x="144" y="112" fill="#f3faf5" font-family="Segoe UI, Arial, sans-serif" font-size="46" font-weight="700" letter-spacing="-1.6">FlowForge</text>
-  <text x="54" y="185" fill="#f3faf5" font-family="Segoe UI, Arial, sans-serif" font-size="31" font-weight="600" letter-spacing="-.5">Make a plan. Run the work. Know what happened.</text>
-  <text x="54" y="226" fill="#acc9c6" font-family="Segoe UI, Arial, sans-serif" font-size="18">A local-first workspace for tasks, study, documents, and approved automations.</text>
-  <rect x="54" y="266" width="291" height="45" rx="22.5" fill="#75e3c4" fill-opacity=".12" stroke="#75e3c4" stroke-opacity=".5"/>
-  <circle cx="76" cy="288.5" r="5" fill="#a9eb9f"/>
-  <text x="92" y="295" fill="#c8f5dd" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="600">React  ·  FastAPI  ·  SQLite</text>
-  <g stroke="#83cfc0" stroke-opacity=".72" stroke-width="3" fill="none" stroke-linecap="round">
-    <path d="M747 168h48"/><path d="M867 168h48"/><path d="M987 168h48"/>
-    <path d="M771 168l-8-7m8 7-8 7"/><path d="M891 168l-8-7m8 7-8 7"/><path d="M1011 168l-8-7m8 7-8 7"/>
+  <rect width="1200" height="220" rx="18" fill="url(#surface)"/>
+  <path d="M0 219h1200" stroke="#8dd4bc" stroke-opacity=".25"/>
+  <path d="M55 65h42l20 20-20 20H55L35 85z" fill="none" stroke="url(#accent)" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M58 85h35" stroke="url(#accent)" stroke-width="5" stroke-linecap="round"/>
+  <text x="139" y="101" fill="#f1f7f3" font-family="Segoe UI, Arial, sans-serif" font-size="52" font-weight="700" letter-spacing="-1.7">FlowForge</text>
+  <text x="38" y="157" fill="#b9d2cc" font-family="Segoe UI, Arial, sans-serif" font-size="17" letter-spacing=".4">PERSONAL WORKFLOW ORCHESTRATION</text>
+  <path d="M633 110h480" stroke="#5d9b96" stroke-width="2" stroke-opacity=".65"/>
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="12" font-weight="600" text-anchor="middle">
+    <circle cx="680" cy="110" r="32" fill="#1e4349" stroke="#76bcb0" stroke-width="2"/>
+    <text x="680" y="114" fill="#dceee6">PLAN</text>
+    <circle cx="815" cy="110" r="32" fill="#1e4349" stroke="#76bcb0" stroke-width="2"/>
+    <text x="815" y="114" fill="#dceee6">APPROVE</text>
+    <circle cx="950" cy="110" r="32" fill="#1e4349" stroke="#76bcb0" stroke-width="2"/>
+    <text x="950" y="114" fill="#dceee6">RUN</text>
+    <circle cx="1085" cy="110" r="32" fill="#225048" stroke="#bce88c" stroke-width="2"/>
+    <text x="1085" y="114" fill="#edf7dc">VERIFY</text>
   </g>
-  <g font-family="Segoe UI, Arial, sans-serif" text-anchor="middle" font-size="13" font-weight="600">
-    <rect x="657" y="129" width="90" height="78" rx="14" fill="#1c4551" stroke="#5faeaa"/>
-    <text x="702" y="174" fill="#dcf3e8">REQUEST</text>
-    <rect x="777" y="129" width="90" height="78" rx="14" fill="#1c4551" stroke="#5faeaa"/>
-    <text x="822" y="174" fill="#dcf3e8">PLAN</text>
-    <rect x="897" y="129" width="90" height="78" rx="14" fill="#1c4551" stroke="#a9df99"/>
-    <text x="942" y="174" fill="#e6f8d9">APPROVE</text>
-    <rect x="1017" y="129" width="90" height="78" rx="14" fill="#1c4551" stroke="#a9df99"/>
-    <text x="1062" y="174" fill="#e6f8d9">EXECUTE</text>
-  </g>
-  <path d="M1070 224q-89 49-201 48" fill="none" stroke="url(#accent)" stroke-width="2" stroke-opacity=".6" stroke-dasharray="5 7"/>
-  <circle cx="869" cy="272" r="7" fill="#a9df99"/>
-  <text x="884" y="278" fill="#b8d5cd" font-family="Segoe UI, Arial, sans-serif" font-size="14">verified result</text>
 </svg>

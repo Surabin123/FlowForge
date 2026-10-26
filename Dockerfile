@@ -8,13 +8,15 @@ RUN npm run build
 FROM python:3.12-slim AS runtime
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    FLOWFORGE_ALLOWED_HOSTS=*
+    FLOWFORGE_CONTAINER_MODE=true \
+    FLOWFORGE_REQUIRE_AUTH=true
 RUN apt-get update \
     && apt-get install -y --no-install-recommends tzdata \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY requirements.txt ./
-RUN python -m pip install --no-cache-dir -r requirements.txt
+RUN python -m pip install --no-cache-dir --upgrade "pip>=26.2,<27" \
+    && python -m pip install --no-cache-dir -r requirements.txt
 COPY backend/ ./backend/
 COPY --from=frontend-build /src/frontend/dist ./frontend/dist
 EXPOSE 10000

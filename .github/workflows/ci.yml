@@ -35,6 +35,11 @@ jobs:
       - name: Frontend tests
         run: npm --prefix frontend test
       - name: Lint
-        run: npm --prefix frontend run --if-present lint
+        run: npm --prefix frontend run lint
       - name: Type check and production build
         run: npm --prefix frontend run build
+      - name: Install browser for smoke test
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - name: Browser smoke test
+        run: npm --prefix frontend run test:e2e

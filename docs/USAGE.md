@@ -4,7 +4,7 @@ FlowForge keeps personal records locally and runs automations only through the c
 
 ## Start with your workspace
 
-1. Launch the API and UI using the [README instructions](../README.md#run-locally).
+1. Launch the API and UI using the [quick start](../README.md#quick-start) or the [platform-specific operations guide](OPERATIONS.md).
 2. Add tasks with titles, priorities, and optional due dates. Completion and edits update the SQLite record.
 3. Add study subjects and sessions. Completing a session updates its stored status and the study totals.
 4. Upload a PDF, TXT, Markdown, or CSV document. FlowForge extracts searchable text and keeps the original file in local storage. The upload limit is set by `FLOWFORGE_MAX_UPLOAD_MB`.
@@ -45,8 +45,6 @@ Schedules can be paused or resumed using the workflow schedule controls. Editing
 
 The app has no general external HTTP automation tool, email/calendar integration, browser controller, or GitHub write action. Those require separate connectors, permission policies, validation, and tests.
 
-## Keep your data safe
+## Data and hosting
 
-The database defaults to `data/flowforge.db`; uploaded originals default to `storage/documents`. Both are ignored by Git. Keep `.env` private. For a local database backup, use the [online backup utility](DEPLOYMENT_RENDER.md#sqlite-backup-restart-and-rollback-limits). A backup on the same disk is not an off-site copy.
-
-The normal local launcher binds to `127.0.0.1`. If you deliberately host FlowForge elsewhere, enable the access-token gate, use HTTPS, persist the database and uploads, and follow the [deployment guide](DEPLOYMENT_RENDER.md). The included Render files are preparation, not evidence of a live deployment.
+The [operations guide](OPERATIONS.md) covers local data paths, configuration, backups, and remote exposure requirements. The [Render guide](DEPLOYMENT_RENDER.md) covers optional hosting; the included files are preparation, not evidence of a live deployment.

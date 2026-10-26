@@ -26,8 +26,7 @@ live_runs: dict[str, asyncio.Task] = {}
 
 @asynccontextmanager
 async def lifespan(app):
-    if settings.require_auth and not settings.access_token:
-        raise RuntimeError("FLOWFORGE_ACCESS_TOKEN is required when FLOWFORGE_REQUIRE_AUTH is enabled")
+    settings.validate_runtime()
     import httpx
     client=httpx.AsyncClient(timeout=httpx.Timeout(45,connect=10),limits=httpx.Limits(max_connections=20,max_keepalive_connections=10,keepalive_expiry=30))
     app.state.outbound_client=client
@@ -214,7 +213,7 @@ def automation_artifact(artifact_id: str):
 def health():
     try:
         with connect() as db: db.execute("SELECT 1")
-        return {"status":"ok","database":"ok","worker":"single-process","ai_configured":bool(settings.ai_api_key and settings.ai_model),"github_configured":bool(settings.github_token)}
+        return {"status":"ok","database":"ok"}
     except Exception as exc: raise HTTPException(503,"Database unavailable") from exc
 
 @app.get("/api/bootstrap")
@@ -331,7 +330,7 @@ async def upload_document(file:UploadFile=File(...)):
             import io
             extracted="\n".join(page.extract_text() or "" for page in PdfReader(io.BytesIO(content)).pages)
         else: extracted=content.decode("utf-8-sig")
-    except Exception as exc: status="failed"; error=f"Text extraction failed: {exc}"
+    except Exception: status="failed"; error="Text extraction failed; the file may be invalid or unsupported"
     with connect() as db:
         db.execute("INSERT INTO documents(id,name,media_type,size_bytes,path,extracted_text,status,error,created_at) VALUES(?,?,?,?,?,?,?,?,?)",(did,name,media,len(content),str(target),extracted,status,error,now())); audit(db,"document.uploaded","document",did,{"size_bytes":len(content)})
         return row_dict(db.execute("SELECT id,name,media_type,size_bytes,status,error,created_at,summary,summary_status,summary_error,summary_updated_at FROM documents WHERE id=?",(did,)).fetchone())
@@ -362,7 +361,7 @@ def retry_document_processing(did:str):
             extracted="\n".join(page.extract_text() or "" for page in PdfReader(io.BytesIO(content)).pages)
         else: extracted=content.decode("utf-8-sig")
     except Exception as exc:
-        with connect() as db: db.execute("UPDATE documents SET status='failed',error=? WHERE id=?",(f"Text extraction failed: {exc}",did))
+        with connect() as db: db.execute("UPDATE documents SET status='failed',error=? WHERE id=?",("Text extraction failed; the file may be invalid or unsupported",did))
         raise HTTPException(422,"Document text extraction failed") from exc
     with connect() as db:
         db.execute("UPDATE documents SET extracted_text=?,status='processed',error=NULL WHERE id=?",(extracted,did)); audit(db,"document.processing_retried","document",did)

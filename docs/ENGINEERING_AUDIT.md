@@ -68,4 +68,4 @@ No production performance measurement is available. The reproducible `backend/be
 
 ## Post-audit implementation status
 
-Changes made after writing this baseline audit, evidence, benchmark output, and decision records are summarized in `PROJECT_STATUS.md` and `docs/decisions/`. In particular, bounded retries, execution/idempotency claims, HTTP pooling, request correlation, and safe process-local metrics now have implementation and test coverage. Remaining limitations are called out there and in the current architecture/deployment documentation rather than described as solved.
+Changes made after writing this baseline audit, evidence, benchmark output, and decision records are summarized in [project status](../PROJECT_STATUS.md) and the [decision records](decisions/). In particular, bounded retries, execution/idempotency claims, HTTP pooling, request correlation, and safe process-local metrics now have implementation and test coverage. Remaining limitations are called out there and in the current architecture/deployment documentation rather than described as solved.

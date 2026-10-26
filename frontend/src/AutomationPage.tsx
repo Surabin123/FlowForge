@@ -52,19 +52,26 @@ export default function AutomationPage({ request, refresh, onHistory }: { reques
   const [recurrence, setRecurrence] = useState('')
   const [timezone, setTimezone] = useState('Asia/Calcutta')
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (isCurrent: () => boolean = () => true) => {
     const [saved, catalog, generated] = await Promise.all([
       request<Plan[]>('/api/automation/plans'), request<Tool[]>('/api/automation/tools'),
       request<Artifact[]>('/api/automation/artifacts'),
     ])
+    if (!isCurrent()) return
     setPlans(saved); setTools(catalog); setArtifacts(generated)
     setSelected(current => current ? saved.find(plan => plan.id === current.id) || current : saved[0] || null)
   }, [request])
 
-  useEffect(() => { void load().catch(err => setError(err instanceof Error ? err.message : 'Could not load automations')) }, [load])
+  useEffect(() => {
+    let active = true
+    void Promise.resolve().then(() => active ? load(() => active) : undefined).catch(err => {
+      if (active) setError(err instanceof Error ? err.message : 'Could not load automations')
+    })
+    return () => { active = false }
+  }, [load])
 
   useEffect(() => {
-    if (!runId || (run && ['completed', 'failed', 'cancelled'].includes(run.status))) return
+    if (!runId || ['completed', 'failed', 'cancelled'].includes(run?.status || '')) return
     const poll = async () => {
       try {
         const current = await request<Run>(`/api/runs/${runId}`)

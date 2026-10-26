@@ -73,4 +73,19 @@ describe('FlowForge task workspace',()=>{
   expect(store.tasks[0].recurrence).toBe('weekly')
   expect(store.tasks[0].reminder_enabled).toBe(true)
  })
+
+ it('keeps invalid workflow output editable and refuses to submit it',async()=>{
+  render(<App />)
+  await screen.findByRole('heading',{name:/Good (morning|afternoon|evening)/})
+  fireEvent.click(screen.getByRole('button',{name:/^Workflows$/}))
+  fireEvent.click(screen.getAllByRole('button',{name:'New workflow'})[0])
+  fireEvent.change(screen.getByLabelText('Workflow name'),{target:{value:'Draft workflow'}})
+  const output=screen.getByLabelText('Final output') as HTMLTextAreaElement
+  fireEvent.change(output,{target:{value:'{"draft":'}})
+  expect(output.value).toBe('{"draft":')
+  expect(screen.getByText('Final output must be valid JSON')).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button',{name:'Save workflow'}))
+  await waitFor(()=>expect(screen.getByText(/Unexpected end of JSON input/)).toBeInTheDocument())
+  expect(vi.mocked(fetch).mock.calls.some(([path,init])=>String(path)==='/api/workflows'&&init?.method==='POST')).toBe(false)
+ })
 })

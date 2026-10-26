@@ -82,3 +82,18 @@ def test_startup_marks_interrupted_runs_as_failed(tmp_path,monkeypatch):
                 assert run["status"]=="failed" and "restart" in run["error"]
                 assert node["status"]=="failed" and "restart" in node["error"]
     asyncio.run(check())
+
+
+def test_online_backup_restores_committed_task_in_temporary_database(tmp_path,monkeypatch):
+    from shutil import copyfile
+    from app.backup_database import backup_database
+
+    configure_db(tmp_path,monkeypatch)
+    task=create_task(TaskIn(title="Backup smoke task"))
+    backup=backup_database(tmp_path/"snapshot.sqlite3")
+    restored=tmp_path/"restored.sqlite3"
+    copyfile(backup,restored)
+    monkeypatch.setattr(config.settings,"database",str(restored))
+    with connect() as db:
+        row=db.execute("SELECT title FROM tasks WHERE id=?",(task["id"],)).fetchone()
+    assert row["title"]=="Backup smoke task"

@@ -1,4 +1,4 @@
-# Architecture and operations
+# Architecture
 
 FlowForge is a single-user application. In local development, React + TypeScript/Vite sends requests to FastAPI; FastAPI stores application state in SQLite and uploaded originals on the local filesystem. The API process owns an async workflow engine and a five-second polling scheduler. The optional Render container serves the compiled Vite app from FastAPI and stores SQLite plus uploads on one persistent disk.
 
@@ -14,7 +14,7 @@ Plan states are `needs_clarification`, `awaiting_approval`, `approved`, or `canc
 
 The model never receives a shell, Python, SQL, arbitrary HTTP, or nested-workflow execution tool. Document contents are sent as untrusted user data to the deadline extractor under a fixed system instruction, and only a validated candidate schema is accepted. Approval is from the user, never document or model text. There is no general HTTP tool yet: preventing SSRF across DNS resolution and redirects, binding credentials outside definitions, and validating external outcomes are prerequisites. No external connector or live AI result has been verified.
 
-Planning is one model call and graph validation is O(V + E) for at most 12 steps. Scheduler polling is bounded by due-time indexes and its configured batch limit; it is a single-process SQLite scheduler. Read outputs are not cached because tasks and documents are mutable. Approved plan reuse avoids repeated planning calls. Provider token counts are recorded only when supplied; cost is not estimated without a trusted price source. The existing synthetic engine benchmark is described in `docs/benchmarks/README.md`; it does not measure live AI or these new tool paths.
+Planning is one model call and graph validation is O(V + E) for at most 12 steps. Scheduler polling is bounded by due-time indexes and its configured batch limit; it is a single-process SQLite scheduler. Read outputs are not cached because tasks and documents are mutable. Approved plan reuse avoids repeated planning calls. Provider token counts are recorded only when supplied; cost is not estimated without a trusted price source. The existing [synthetic engine benchmark](benchmarks/README.md) does not measure live AI or these new tool paths.
 
 ## Persistent scheduling
 
@@ -31,7 +31,7 @@ Supported uploads are size-limited PDF, TXT, Markdown, and CSV. Extraction is lo
 
 Each node start is claimed with a conditional SQLite state update. A run has a persisted execution claim, and optional `Idempotency-Key` values deduplicate manual starts per workflow. Transient provider/network failures and timeouts use bounded retries with exponential jitter; configuration, schema, and most client failures stop immediately. Attempts, durations, categories, safe reasons, and bounded history are persisted. `FLOWFORGE_MAX_PARALLEL_RUNS` limits scheduled and manual execution admission in this single process.
 
-External effects are at-least-once across the crash window between provider success and local result commit. Restart recovery marks active attempts interrupted and asks the operator to reconcile before retrying. It cannot resume an in-flight node or guarantee exactly-once provider behavior. JSON logs carry request IDs and allowlisted metadata. `/api/internal/metrics` exposes bounded process-local counters and percentiles; values reset on process restart, and no exporter or trace backend is configured. See `docs/ENGINEERING_AUDIT.md` for the audit and `docs/benchmarks/README.md` for the synthetic local baseline.
+External effects are at-least-once across the crash window between provider success and local result commit. Restart recovery marks active attempts interrupted and asks the operator to reconcile before retrying. It cannot resume an in-flight node or guarantee exactly-once provider behavior. JSON logs carry request IDs and allowlisted metadata. `/api/internal/metrics` exposes bounded process-local counters and percentiles; values reset on process restart, and no exporter or trace backend is configured. See the [engineering audit](ENGINEERING_AUDIT.md) and [synthetic local baseline](benchmarks/README.md).
 
 ## Operational boundaries
 
@@ -41,4 +41,4 @@ Local development defaults to no authentication and the run script binds to loop
 
 `.github/workflows/ci.yml` installs Python requirements and uses `npm ci` from the committed lockfile, then runs backend tests, frontend tests, and a production build. Tests do not require secrets or external providers; AI provider tests use an HTTP mock.
 
-The deployment and recovery plan is documented in `docs/DEPLOYMENT_RENDER.md`. The Render disk is paid and single-instance. SQLite online backups can be created with `python -m app.backup_database <destination>` (with `backend` on `PYTHONPATH`); off-site retention and restore verification remain operator tasks.
+The deployment and recovery plan is documented in the [Render guide](DEPLOYMENT_RENDER.md). The Render disk is paid and single-instance. SQLite online backups can be created with `python -m app.backup_database <destination>` (with `backend` on `PYTHONPATH`); off-site retention and restore verification remain operator tasks. Local setup and troubleshooting are in [operations](OPERATIONS.md).
